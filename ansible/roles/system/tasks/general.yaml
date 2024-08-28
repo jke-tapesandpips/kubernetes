@@ -1,0 +1,12 @@
+---
+
+- name: Update apt-cache
+  ansible.builtin.apt:
+    update_cache: yes
+    upgrade: dist
+
+- name: Add nodes to /etc/hosts
+  ansible.builtin.file:
+    path: /etc/hosts
+    line: "{{ item }}"
+  loop: "{{ etc.hosts }}"

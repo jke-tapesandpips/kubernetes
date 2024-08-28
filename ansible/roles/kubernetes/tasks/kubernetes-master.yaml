@@ -1,0 +1,40 @@
+---
+
+- name: Copy k3s Setup-Script
+  ansible.builtin.copy:
+    src: "{{ role_path }}"/files/k3s.sh
+    dest: /home/cluster/k3s.sh
+    owner: cluster
+    group: cluster
+    mode: "0755"
+    
+- name: Install k3s
+  shell: echo /home/cluster/k3s.sh | INSTALL_K3S_EXEC="--write-kubeconfig-mode=644" sh -s - server --cluster-init
+
+- name: Change ownership of k3s.yaml
+  file:
+    path: /etc/rancher/k3s/k3s.yaml
+    owner: cluster
+    group: cluster
+
+- name: Change ownership of node-token
+  file:
+    path: /var/lib/rancher/k3s/server/node-token
+    owner: cluster
+    group: cluster
+
+- name: Enable unattended upgrades
+  apt:
+    upgrade: dist
+    update_cache: yes
+
+- name: Configure unattended-upgrades
+  copy:
+    content: |
+      Unattended-Upgrade::Origins-Pattern {
+        "o=Ubuntu,a=stable";
+        "o=Ubuntu,a=stable-security";
+        "o=Ubuntu,a=stable-updates";
+      };
+      Unattended-Upgrade::Automatic-Reboot "true";
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades

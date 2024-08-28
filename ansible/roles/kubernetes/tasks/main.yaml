@@ -1,0 +1,13 @@
+---
+
+- name: Include kubernetes-master
+  ansible.builtin.include_tasks: kubernetes-master.yaml
+  when: "'kubernetes_master' in group_names"
+
+- name: Include kubernetes-master-slave
+  ansible.builtin.include_tasks: kubernetes-master-slave.yaml
+  when: "'kubernetes_master_slave' in group_names"
+
+- name: Include kubernetes-worker
+  ansible.builtin.include_tasks: kubernetes-worker.yaml
+  when: "'kubernetes_worker' in group_names"

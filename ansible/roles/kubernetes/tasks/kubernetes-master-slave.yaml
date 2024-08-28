@@ -1,0 +1,46 @@
+---
+
+- name: Update apt package list
+  apt:
+    update_cache: yes
+
+- name: Retrieve K3s node token from master-nbg-0
+  shell: ssh -o StrictHostKeyChecking=accept-new cluster@master-nbg-0 sudo cat /var/lib/rancher/k3s/server/token
+  register: k3s_token
+  become: true
+  become_user: cluster
+
+- name: Install K3s
+  shell: |
+    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--write-kubeconfig-mode=644" K3S_TOKEN={{ k3s_token.stdout }} sh -s - server --server https://master-nbg-0:6443
+    sleep 15
+
+- name: Change ownership of k3s.yaml
+  file:
+    path: /etc/rancher/k3s/k3s.yaml
+    owner: cluster
+    group: cluster
+
+- name: Change ownership of node-token
+  file:
+    path: /var/lib/rancher/k3s/server/node-token
+    owner: cluster
+    group: cluster
+
+- name: Enable unattended upgrades
+  copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+
+- name: Configure unattended-upgrades origins
+  copy:
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    content: |
+      Unattended-Upgrade::Origins-Pattern {
+        "o=Ubuntu,a=stable";
+        "o=Ubuntu,a=stable-security";
+        "o=Ubuntu,a=stable-updates";
+      };
+      Unattended-Upgrade::Automatic-Reboot "true";
