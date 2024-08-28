@@ -1,0 +1,8 @@
+#cloud-config
+users:
+  - name: kubernetes.fallback
+    ssh-authorized-keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILL7mlMk2TIOCaSNog7xmN1LOsQzivOnHut/+fdKvLl5
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    groups: sudo
+    shell: /bin/bash
