@@ -3,3 +3,5 @@ collections:
     type: git
   - name: https://github.com/ansible-collections/hetzner.hcloud
     type: git
+  - name: https://github.com/ansible-collections/kubernetes.core.git
+    type: git
