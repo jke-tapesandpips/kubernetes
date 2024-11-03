@@ -23,6 +23,8 @@
 - name: "Add normal users"
   user:
     name: "{{ item.name }}"
+    groups:
+      - "{{ item.name }}"
     append: yes
   loop: "{{ users }}"
   loop_control:
