@@ -96,7 +96,6 @@ hcloud:
     public_ipv4_enabled: false
     public_ipv6_enabled: true
     placement_group: "pg-kubernetes"
-    ssh_keys: 
     firewalls:
        - firewall-default
     volumes: []
