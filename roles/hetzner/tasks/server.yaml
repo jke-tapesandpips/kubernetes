@@ -11,6 +11,7 @@
     ssh_keys: "{{ hcloud.sshkey[0].name }}"
     firewalls: "{{ hcloud.server.firewalls }}"
     labels: "{{ item.labels }}"
+    force: true
     upgrade_disk: false
     backups: false
     enable_ipv4: "{{ hcloud.server.public_ipv4_enabled }}"
@@ -33,6 +34,7 @@
     ssh_keys: "{{ hcloud.sshkey[0].name }}"
     firewalls: "{{ hcloud.server.firewalls }}"
     labels: "{{ item.labels }}"
+    force: true
     upgrade_disk: false
     backups: false
     enable_ipv4: "{{ hcloud.server.public_ipv4_enabled }}"

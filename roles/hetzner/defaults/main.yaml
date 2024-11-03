@@ -17,6 +17,13 @@ hcloud:
           source_ips:
             - 0.0.0.0/0
             - ::/0
+        - description: http
+          direction: in
+          protocol: tcp
+          port: 80
+          source_ips:
+            - 0.0.0.0/0
+            - ::/0
         - description: icmp
           direction: in
           protocol: icmp
@@ -74,7 +81,7 @@ hcloud:
         state: present
 
   placement_groups:
-    - name: pg-scraper
+    - name: pg-kubernetes
       state: present
       type: spread
 
@@ -88,7 +95,7 @@ hcloud:
     nbg: nbg1-dc3
     public_ipv4_enabled: false
     public_ipv6_enabled: true
-    placement_group: "pg-scraper"
+    placement_group: "pg-kubernetes"
     ssh_keys: 
     firewalls:
        - firewall-default
