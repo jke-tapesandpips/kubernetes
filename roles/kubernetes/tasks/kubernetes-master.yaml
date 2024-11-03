@@ -1,40 +1,58 @@
 ---
 
-- name: Copy k3s Setup-Script
-  ansible.builtin.copy:
-    src: "{{ role_path }}"/files/k3s.sh
-    dest: /home/cluster/k3s.sh
-    owner: cluster
-    group: cluster
-    mode: "0755"
-    
-- name: Install k3s
-  shell: echo /home/cluster/k3s.sh | INSTALL_K3S_EXEC="--write-kubeconfig-mode=644" sh -s - server --cluster-init
+- name: Block for setting up the master node
+  tags:
+    - kubernetes
+    - kubernetes-master
+    - kubernetes-setup
+    - master
+    - setup
+  block:
 
-- name: Change ownership of k3s.yaml
-  file:
-    path: /etc/rancher/k3s/k3s.yaml
-    owner: cluster
-    group: cluster
+    - name: Install k3s
+      shell: curl -sfL https://get.k3s.io | sh -s - server --cluster-init --node-ip={{ private_networks[0].ip }} --disable-cloud-controller --disable metrics-server --disable=traefik --write-kubeconfig-mode=644 --disable local-storage --node-name="$(hostname -f)" --cluster-cidr="10.244.0.0/16" --kube-controller-manager-arg="bind-address=0.0.0.0" --kube-proxy-arg="metrics-bind-address=0.0.0.0" --kube-scheduler-arg="bind-address=0.0.0.0" --token={{ k3s.token }} --tls-san="$(hostname -I | awk '{print $2}')" --tls-san="{{ hostvars[inventory_hostname].ansible_host }}" --flannel-iface=enp7s0 --secrets-encryption --kubelet-arg="cloud-provider=external"
 
-- name: Change ownership of node-token
-  file:
-    path: /var/lib/rancher/k3s/server/node-token
-    owner: cluster
-    group: cluster
+    - name: Change ownership of k3s.yaml
+      file:
+        path: /etc/rancher/k3s/k3s.yaml
+        owner: cluster
+        group: cluster
+        mode: "0600"
 
-- name: Enable unattended upgrades
-  apt:
-    upgrade: dist
-    update_cache: yes
+    - name: Change ownership of token
+      file:
+        path: /var/lib/rancher/k3s/server/token
+        owner: cluster
+        group: cluster
 
-- name: Configure unattended-upgrades
-  copy:
-    content: |
-      Unattended-Upgrade::Origins-Pattern {
-        "o=Ubuntu,a=stable";
-        "o=Ubuntu,a=stable-security";
-        "o=Ubuntu,a=stable-updates";
-      };
-      Unattended-Upgrade::Automatic-Reboot "true";
-    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+#    - name: Download awscli
+#      get_url:
+#        url: https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip
+#        dest: /tmp/awscliv2.zip
+#
+#    - name: Unzip awscli
+#      unarchive:
+#        src: /tmp/awscliv2.zip
+#        dest: /tmp
+#        remote_src: yes
+#
+#    - name: Install awscli
+#      command: /tmp/aws/install --update
+#
+#    - name: Create .aws directory
+#      file:
+#        path: /root/.aws
+#        state: directory
+#        owner: root
+#        group: root
+#
+#    - name: Copy aws-credentials for Backup
+#      copy:
+#        src: "{{ role_path }}/files/aws-backup-credentials"
+#        dest: /root/.aws/credentials
+#        owner: root
+#        group: root
+#        mode: 0600
+
+    - name: Install helm
+      shell: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash

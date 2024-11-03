@@ -1,13 +1,83 @@
 ---
 
-- name: Include kubernetes-master
+- name: Include Kubernetes-Master
   ansible.builtin.include_tasks: kubernetes-master.yaml
-  when: "'kubernetes_master' in group_names"
+  when: "'hcloud_master' in group_names"
+  tags:
+    - kubernetes
+    - kubernetes-master
+    - kubernetes-setup
+    - master
+    - setup
 
-- name: Include kubernetes-master-slave
+- name: Include Kubernetes-Master-Slave
   ansible.builtin.include_tasks: kubernetes-master-slave.yaml
-  when: "'kubernetes_master_slave' in group_names"
+  when: "'hcloud_slave' in group_names"
+  tags:
+    - kubernetes
+    - kubernetes-master-slave
+    - kubernetes-setup
+    - master-slave
+    - setup
 
-- name: Include kubernetes-worker
+- name: Include Kubernetes-worker
   ansible.builtin.include_tasks: kubernetes-worker.yaml
-  when: "'kubernetes_worker' in group_names"
+  when: "'hcloud_worker' in group_names"
+  tags:
+    - kubernetes
+    - kubernetes-worker
+    - kubernetes-setup
+    - worker
+    - setup
+
+- name: Include Namespaces
+  ansible.builtin.include_tasks: namespace.yaml
+  when: "'hcloud_master' in group_names"
+  tags:
+    - kubernetes
+    - kubernetes-namespace
+    - namespace
+
+- name: Include Secrets
+  ansible.builtin.include_tasks: secrets.yaml
+  when: "'hcloud_master' in group_names"
+  tags:
+    - kubernetes
+    - kubernetes-secrets
+    - secrets
+    - pods
+    - kubernetes-pods
+
+- name: Include longhorn
+  ansible.builtin.include_tasks: longhorn.yaml
+  when: "'hcloud_master' in group_names"
+  tags:
+    - kubernetes
+    - kubernetes-storage
+    - storage
+
+- name: Include Kubernetes-Cert-Manager
+  ansible.builtin.include_tasks: cert-manager.yaml
+  when: "'hcloud_master' in group_names"
+  tags:
+    - kubernetes
+    - kubernetes-cert-manager
+    - cert-manager
+
+- name: Include Kubernetes-Pods
+  ansible.builtin.include_tasks: kubernetes-pods.yaml
+  when: "'hcloud_master' in group_names"
+  tags:
+    - kubernetes
+    - kubernetes-pods
+    - pods
+
+- name: Include Postgres
+  ansible.builtin.include_tasks: postgres.yaml
+  when: "'hcloud_master' in group_names"
+  tags:
+    - kubernetes
+    - kubernetes-postgres
+    - postgres
+    - pods
+    - kubernetes-pods

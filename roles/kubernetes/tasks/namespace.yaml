@@ -1,0 +1,27 @@
+- name: Block for creating namesapces
+  tags:
+    - kubernetes
+    - kubernetes-namespace
+    - namespace
+  block:
+
+    - name: Ensure namespaces exists
+      k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ item }}"
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+      loop: "{{ k3s.namespace }}"
+
+    - name: Create nginx namespace
+      k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: nginx
+        kubeconfig: /etc/rancher/k3s/k3s.yaml

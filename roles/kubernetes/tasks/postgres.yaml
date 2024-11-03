@@ -1,0 +1,81 @@
+---
+- name: Check if postgres dump import is needed
+  tags:
+  - postgres
+  - kubernetes-postgres
+  - kubernetes
+  - pods
+  - kubernetes-pods
+
+  block:
+  - name: Get all (prod)-pods
+    shell: kubectl get pods -n default
+    register: pods_prod
+
+  - name: Get all (stage)-pods
+    shell: kubectl get pods -n stage
+    register: pods_stage
+
+  - name: Get postgres pods from pods variable (prod)
+    set_fact:
+      postgres_prod_pods: "{{ pods_prod.stdout_lines | select('search', 'postgres') | list }}"
+
+  - name: Get postgres pods from pods variable (stage)
+    set_fact:
+      postgres_stage_pods: "{{ pods_stage.stdout_lines | select('search', 'postgres') | list }}"
+
+  - name: Reduce output to pod-names (prod)
+    set_fact:
+      postgres_prod_pod_names: "{{ postgres_prod_pods | map('regex_replace', '^(\\S+).*', '\\1') | list }}"
+
+  - name: Reduce output to pod-names (stage)
+    set_fact:
+      postgres_stage_pod_names: "{{ postgres_stage_pods | map('regex_replace', '^(\\S+).*', '\\1') | list }}"
+
+  - name: Wait till "database system is ready to accept connections" in logs (prod)
+    shell: kubectl logs {{ postgres_prod_pod_names[0] }} -n default | grep "database system is ready to accept connections"
+    register: db_ready_prod
+    retries: 5
+    delay: 30
+    until: db_ready_prod.stdout.find('database system is ready to accept connections') != -1
+
+  - name: Wait till "database system is ready to accept connections" in logs (stage)
+    shell: kubectl logs {{ postgres_stage_pod_names[0] }} -n stage | grep "database system is ready to accept connections"
+    register: db_ready_stage
+    retries: 5
+    delay: 30
+    until: db_ready_stage.stdout.find('database system is ready to accept connections') != -1
+
+  - name: Check if {{ postgres.database }} Database already exists (prod)
+    shell: kubectl exec -it {{ postgres_prod_pod_names[0] }} -n default -- psql -U {{ postgres.username }} -l | grep {{ postgres.database }}
+    register: db_check
+    changed_when: false
+    ignore_errors: true
+
+  - name: Check if {{ postgres.database }} Database already exists (stage)
+    shell: kubectl exec -it {{ postgres_stage_pod_names[0] }} -n stage -- psql -U {{ postgres.username }} -l | grep {{ postgres.database }}
+    register: db_check_stage
+    changed_when: false
+    ignore_errors: true
+
+  - name: Create {{ postgres.database }} Database (prod)
+    shell: kubectl exec -it {{ postgres_prod_pod_names[0] }} -n default -- createdb -U {{ postgres.username }} {{ postgres.database }}
+    register: result
+    retries: 5
+    delay: 30
+    until: result.rc == 0
+    when: db_check.stdout == ""
+
+  - name: Add IP-Range to pg_hba.conf (prod)
+    shell: kubectl exec -it {{ postgres_prod_pod_names[0] }} -n default -- echo 'host    all    all    10.244.0.0/16    password' >> /var/lib/postgresql/data/pgdata/pg_hba.conf
+
+  - name: Create {{ postgres.database }} Database (stage)
+    shell: kubectl exec -it {{ postgres_stage_pod_names[0] }} -n stage -- createdb -U {{ postgres.username }} {{ postgres.database }}
+    register: result
+    retries: 5
+    delay: 30
+    until: result.rc == 0
+    when: db_check_stage.stdout == ""
+
+  - name: Add IP-Range to pg_hba.conf (stage)
+    shell: kubectl exec -it {{ postgres_stage_pod_names[0] }} -n stage -- echo 'host    all    all    10.244.0.0/16    password' >> /var/lib/postgresql/data/pgdata/pg_hba.conf

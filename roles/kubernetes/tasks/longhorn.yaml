@@ -1,0 +1,35 @@
+---
+
+- name: Block for setting up longhorn
+  tags:
+    - kubernetes-longhorn
+    - longhorn
+    - storage
+  block:
+
+    - name: Add longhorn repo
+      shell: helm repo add longhorn https://charts.longhorn.io
+
+    - name: Update longhorn repo
+      shell: helm repo update longhorn
+
+    - name: Check if longhorn is already installed
+      shell: helm list -n longhorn-system --kubeconfig /etc/rancher/k3s/k3s.yaml | grep longhorn
+      register: longhorn_installed
+      ignore_errors: true
+
+    - name: Install longhorn
+      shell: helm install longhorn longhorn/longhorn -n longhorn-system --create-namespace --kubeconfig /etc/rancher/k3s/k3s.yaml
+      when: longhorn_installed.rc != 0 and not ('already exists' in longhorn_installed.stderr)
+
+    - name: Copy longhorn-storageclass.yaml
+      copy:
+        src: "{{ role_path }}/files/longhorn-storageclass.yaml"
+        dest: "/var/lib/rancher/k3s/server/manifests/longhorn-storageclass.yaml"
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Apply longhorn-storageclass.yaml
+      shell: kubectl apply -f /var/lib/rancher/k3s/server/manifests/longhorn-storageclass.yaml
+      ignore_errors: true

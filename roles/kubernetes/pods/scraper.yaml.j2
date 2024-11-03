@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webscraper
+  namespace: {{ item }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webscraper
+  template:
+    metadata:
+      labels:
+        app: webscraper
+    spec:
+      containers:
+      - name: webscraper
+        image: 674753550466.dkr.ecr.eu-central-1.amazonaws.com/vusyon/ms_webscraper:master-arm
+        ports:
+        - containerPort: 3000
+        env:
+        - name: POSTGRES_HOST
+          value: webscraper-postgres.default.svc.cluster.local
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: webscraper-postgres-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: webscraper-postgres-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_DB
+          value: "webscraper"
+        - name: POSTGRES_PORT
+          value: "5432"
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1536Mi"
+      imagePullSecrets:
+      - name: ecr-registry-secret
+
+---
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: webscraper-autoscaling
+  namespace: {{ item }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: webscraper
+  minReplicas: {% if item == 'default' %}2{% else %}1{% endif %}
+
+  maxReplicas: {% if item == 'default' %}12{% else %}4{% endif %}
+
+  metrics:
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: AverageValue
+        averageValue: "1024Mi"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: webscraper-service
+  namespace: {{ item }}
+spec:
+  selector:
+    app: webscraper
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000

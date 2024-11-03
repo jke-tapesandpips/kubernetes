@@ -1,45 +1,46 @@
 ---
 
-- name: Update apt package list
-  apt:
-    update_cache: yes
+- name: Block for setting up the worker nodes
+  tags:
+    - kubernetes
+    - kubernetes-worker
+    - kubernetes-setup
+    - worker
+    - setup
+  block:
 
-- name: Wait for the K3s server to be available
-  command: >
-    bash -c 'until curl -k https://master-nbg-0:6443; do sleep 5; done'
-  register: curl_result
-  until: curl_result.rc == 0
-  retries: -1
-  delay: 5
+    - name: Install K3s
+      shell: curl -sfL https://get.k3s.io | K3S_URL=https://master-nbg-0:6443 K3S_TOKEN="{{ k3s.token }}" sh -s - agent --node-name="$(hostname -f)" --node-ip={{ private_networks[0].ip }} --flannel-iface=enp7s0 --kubelet-arg="cloud-provider=external"
+      async: 10
+      poll: 0
 
-- name: Retrieve remote token
-  shell: ssh -o StrictHostKeyChecking=accept-new cluster@master-nbg-0 sudo cat /var/lib/rancher/k3s/server/node-token
-  register: remote_token
-  become: true
-  become_user: cluster
+    - name: create .kube directory
+      file:
+        path: /home/cluster/.kube
+        state: directory
+        owner: cluster
+        group: cluster
+    
+    - name: Fetch hostkey of master-nbg-0
+      shell: ssh-keyscan master-nbg-0
+      register: host_key
+      become_user: cluster
 
-- name: Install K3s
-  shell: curl -sfL https://get.k3s.io | K3S_URL=https://master-nbg-0:6443 K3S_TOKEN={{ remote_token.stdout }} sh -
+    - name: Add host keys to known_hosts
+      lineinfile:
+        path: /home/cluster/.ssh/known_hosts
+        line: "{{ item }}"
+        create: yes
+      loop: "{{ host_key.stdout_lines }}"
+      become_user: cluster
 
-- name: Ensure packages are updated and upgraded
-  apt:
-    upgrade: dist
-    update_cache: yes
+    - name: Copy kubeconfig from master
+      shell: scp cluster@master-nbg-0:/etc/rancher/k3s/k3s.yaml /home/cluster/.kube/config
+      become_user: cluster
 
-- name: Reboot if required
-  reboot:
-    msg: "Reboot initiated by Ansible for package updates"
-    pre_reboot_delay: 60
-    post_reboot_delay: 120
-    reboot_timeout: 300
-
-- name: Configure unattended-upgrades
-  copy:
-    content: |
-      Unattended-Upgrade::Origins-Pattern {
-        "o=Ubuntu,a=stable";
-        "o=Ubuntu,a=stable-security";
-        "o=Ubuntu,a=stable-updates";
-      };
-      Unattended-Upgrade::Automatic-Reboot "true";
-    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    - name: Replace localhost with master-nbg-0 in kubeconfig
+      replace:
+        path: /home/cluster/.kube/config
+        regexp: '127.0.0.1'
+        replace: 'master-nbg-0'
+      become_user: cluster

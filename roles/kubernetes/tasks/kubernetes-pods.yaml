@@ -1,0 +1,45 @@
+---
+
+- name: Block for setting up pods
+  tags:
+    - kubernetes
+    - kubernetes-pods
+    - pods
+  block:
+
+#    - name: Render service templates
+#      template:
+#        src: "{{ role_path }}/templates/pods/service.yaml.j2"
+#        dest: "/var/deployment/service-{{ item }}.yaml"
+#      loop: "{{ k3s.namespace }}"
+
+    - name: Copy pod configs
+      copy:
+        src: "{{ item }}"
+        dest: "/var/deployment//{{ item | basename }}"
+        owner: root
+        group: root
+        mode: 0644
+      with_fileglob:
+        - "{{ role_path }}/files/pods/*.yaml"
+
+    - name: Get yaml files in /var/deployment
+      find:
+        paths: /var/deployment
+        patterns: "*.yaml"
+      register: pod_files
+
+    - name: Start pods (stage)
+      shell: kubectl apply -f {{ item.path }} --namespace stage
+      loop: "{{ pod_files.files }}"
+      when: '"nginx" not in item.path and "scraper" not in item.path'
+
+    - name: Start pods (prod)
+      shell: kubectl apply -f {{ item.path }} --namespace default
+      loop: "{{ pod_files.files }}"
+      when: '"nginx" not in item.path and "scraper" not in item.path'
+
+    - name: Start nginx
+      shell: kubectl apply -f {{ item.path }}
+      loop: "{{ pod_files.files }}"
+      when: '"nginx" in item.path and "scraper" in item.path'

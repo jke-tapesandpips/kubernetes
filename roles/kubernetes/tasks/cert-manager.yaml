@@ -1,0 +1,23 @@
+---
+
+- name: Block for setting up cert-manager
+  tags:
+    - kubernetes
+    - kubernetes-cert-manager
+    - cert-manager
+  block:
+   
+    - name: Add jetstack repo
+      shell: helm repo add jetstack https://charts.jetstack.io
+    
+    - name: Update jetstack repo
+      shell: helm repo update jetstack
+    
+    - name: Check if cert-manager is already installed
+      shell: helm list -n cert-manager --kubeconfig /etc/rancher/k3s/k3s.yaml | grep cert-manager
+      register: certmanager_installed
+      ignore_errors: true
+
+    - name: Install cert-manager
+      shell: helm install cert-manager jetstack/cert-manager -n cert-manager --create-namespace --set crds.enabled=true --kubeconfig /etc/rancher/k3s/k3s.yaml
+      when: certmanager_installed.rc != 0 and not ('already exists' in certmanager_installed.stderr)
