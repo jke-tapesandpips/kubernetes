@@ -56,6 +56,13 @@
     - kubernetes-storage
     - storage
 
+- name: Include hcloud
+  ansible.builtin.include_tasks: hcloud.yaml
+  when: "'hcloud_master' in group_names"
+  tags:
+    - kubernetes
+    - kubernetes-hcloud
+
 - name: Include Kubernetes-Cert-Manager
   ansible.builtin.include_tasks: cert-manager.yaml
   when: "'hcloud_master' in group_names"

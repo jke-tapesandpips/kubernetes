@@ -19,18 +19,7 @@ spec:
             name: nginx-service
             port:
               number: 80
-  - host: 'kubernetes.stage.jokester.cloud'
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: nginx-service-stage
-            port:
-              number: 80
   tls:
   - hosts:
     - 'kubernetes.jokester.cloud'
-    - 'kubernetes.stage.jokester.cloud'
     secretName: kubernetes-jokester-cloud-tls

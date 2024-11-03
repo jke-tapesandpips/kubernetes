@@ -13,6 +13,10 @@
 #        dest: "/var/deployment/service-{{ item }}.yaml"
 #      loop: "{{ k3s.namespace }}"
 
+    - name: Apply remote pod configs
+      shell: kubectl apply -f {{ item }}
+      loop: "{{ k3s.pod_url }}"
+
     - name: Copy pod configs
       copy:
         src: "{{ item }}"
@@ -29,17 +33,6 @@
         patterns: "*.yaml"
       register: pod_files
 
-    - name: Start pods (stage)
-      shell: kubectl apply -f {{ item.path }} --namespace stage
-      loop: "{{ pod_files.files }}"
-      when: '"nginx" not in item.path and "scraper" not in item.path'
-
-    - name: Start pods (prod)
-      shell: kubectl apply -f {{ item.path }} --namespace default
-      loop: "{{ pod_files.files }}"
-      when: '"nginx" not in item.path and "scraper" not in item.path'
-
-    - name: Start nginx
+    - name: Start pods
       shell: kubectl apply -f {{ item.path }}
       loop: "{{ pod_files.files }}"
-      when: '"nginx" in item.path and "scraper" in item.path'

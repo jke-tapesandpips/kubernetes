@@ -1,0 +1,32 @@
+---
+
+- name: Block for setting up Hcloud/HCCM
+  tags:
+    - kubernetes
+    - kubernetes-hcloud
+    - hcloud
+  block:
+
+    - name: Add hcloud helm repo
+      shell: helm repo add hcloud https://charts.hetzner.cloud
+
+    - name: Update hcloud helm repo
+      shell: helm repo update hcloud
+
+    - name: Check for secret existence
+      shell: kubectl -n kube-system get secret hcloud
+      register: hcloud_secret
+      ignore_errors: true
+    
+    - name: Generate hcloud secret
+      shell: kubectl -n kube-system create secret generic hcloud --from-literal=token={{ k3s.hcloud }} --from-literal=network=network-kube-1
+      when: hcloud_secret.rc != 0 and not ('already exists' in hcloud_secret.stderr)
+    
+    - name: Check if hccm is already installed
+      shell: helm list -n kube-system --kubeconfig /etc/rancher/k3s/k3s.yaml | grep hccm
+      register: hccm_installed
+      ignore_errors: true
+    
+    - name: Install hccm
+      shell: helm install hccm hcloud/hcloud-cloud-controller-manager -n kube-system --set networking.enabled=true --set networking.clusterCIDR=10.42.0.0/16 --kubeconfig /etc/rancher/k3s/k3s.yaml
+      when: hccm_installed.rc != 0 and not ('already exists' in hccm_installed.stderr)
