@@ -93,7 +93,7 @@ hcloud:
     backup: false
     fsn: fsn1-dc14
     nbg: nbg1-dc3
-    public_ipv4_enabled: false
+    public_ipv4_enabled: true
     public_ipv6_enabled: true
     placement_group: "pg-kubernetes"
     firewalls:
