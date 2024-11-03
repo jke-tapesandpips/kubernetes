@@ -1,0 +1,55 @@
+---
+
+- name: Create a basic server (nuremberg) 
+  hetzner.hcloud.server:
+    name: "{{ item.name }}"
+    server_type: "{{ hcloud.server.type }}"
+    image: "{{ hcloud.server.image }}"
+    state: "{{ hcloud.server.state }}"
+    placement_group: "{{ hcloud.server.placement_group }}"
+    datacenter: "{{ hcloud.server.nbg }}"
+    ssh_keys: "{{ hcloud.sshkey[0].name }}"
+    firewalls: "{{ hcloud.server.firewalls }}"
+    labels: "{{ item.labels }}"
+    upgrade_disk: false
+    backups: false
+    enable_ipv4: "{{ hcloud.server.public_ipv4_enabled }}"
+    enable_ipv6: "{{ hcloud.server.public_ipv6_enabled }}"
+    delete_protection: false
+    rebuild_protection: false
+  when: "'nbg' in item.name"
+  loop: "{{ servers }}"
+  loop_control:
+    loop_var: item
+
+- name: Create a basic server (falkenstein)
+  hetzner.hcloud.server:
+    name: "{{ item.name }}"
+    server_type: "{{ hcloud.server.type }}"
+    image: "{{ hcloud.server.image }}"
+    state: "{{ hcloud.server.state }}"
+    placement_group: "{{ hcloud.server.placement_group }}"
+    datacenter: "{{ hcloud.server.fsn }}"
+    ssh_keys: "{{ hcloud.sshkey[0].name }}"
+    firewalls: "{{ hcloud.server.firewalls }}"
+    labels: "{{ item.labels }}"
+    upgrade_disk: false
+    backups: false
+    enable_ipv4: "{{ hcloud.server.public_ipv4_enabled }}"
+    enable_ipv6: "{{ hcloud.server.public_ipv6_enabled }}"
+    delete_protection: false
+    rebuild_protection: false
+  when: "'fsn' in item.name"
+  loop: "{{ servers }}"
+  loop_control:
+    loop_var: item
+
+- name: "Ensure server networks match desired state."
+  hetzner.hcloud.hcloud_server_network:
+    network: internal_network
+    server: "{{ item.name }}"
+    ip: "{{ item.internal_ip }}"
+    state: present
+  loop: "{{ servers }}"
+  loop_control:
+    loop_var: item

@@ -1,0 +1,16 @@
+---
+
+- name: Create SSH-Key
+  include_tasks: ssh_key.yaml
+
+- name: Create Firewall
+  include_tasks: firewall.yaml
+
+- name: Create Network
+  include_tasks: network.yaml
+
+- name: Create Placement-Group
+  include_tasks: placement_group.yaml
+
+- name: Create Server
+  include_tasks: server.yaml

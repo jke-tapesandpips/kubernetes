@@ -1,4 +1,2 @@
-terraform/terraform.tfvars
-terraform/.aws
-terraform/.terraform.d
-terraform/.terraform
+tmp
+.env.local

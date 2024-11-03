@@ -1,0 +1,11 @@
+---
+
+- name: Create Placement-Group
+  hetzner.hcloud.placement_group:
+    name: "{{ pg.name }}"
+    type:  "{{ pg.type }}"
+    state: "{{ pg.state }}"
+  loop: "{{ hcloud.placement_groups }}"
+  loop_control:
+    loop_var: pg
+    label: "{{ pg.name }}"
