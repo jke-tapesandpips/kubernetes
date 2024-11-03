@@ -10,6 +10,6 @@
   block:
 
     - name: Install K3s
-      shell: curl -sfL https://get.k3s.io | K3S_URL=https://master-nbg-0:6443 K3S_TOKEN="{{ k3s.token }}" sh -s - server --cluster-init --node-ip={{ private_networks[0].ip }} --disable-cloud-controller --disable metrics-server --disable=traefik --write-kubeconfig-mode=644 --disable local-storage --node-name="$(hostname -f)" --cluster-cidr="10.244.0.0/16" --kube-controller-manager-arg="bind-address=0.0.0.0" --kube-proxy-arg="metrics-bind-address=0.0.0.0" --kube-scheduler-arg="bind-address=0.0.0.0" --tls-san="$(hostname -I | awk '{print $2}')" --tls-san="{{ hostvars[inventory_hostname].ansible_host }}" --flannel-iface=enp7s0 --secrets-encryption --kubelet-arg="cloud-provider=external"
+      shell: curl -sfL https://get.k3s.io | K3S_URL=https://master-nbg-0:6443 K3S_TOKEN="{{ k3s.token }}" sh -s - server --cluster-init --node-ip={{ private_networks[0].ip }} --disable-cloud-controller --disable metrics-server --disable=traefik --write-kubeconfig-mode=644 --disable local-storage --node-name="$(hostname -f)" --cluster-cidr="10.244.0.0/16" --kube-controller-manager-arg="bind-address=0.0.0.0" --kube-proxy-arg="metrics-bind-address=0.0.0.0" --kube-scheduler-arg="bind-address=0.0.0.0" --tls-san="$(hostname -I | awk '{print $2}')" --tls-san="{{ ansible_host }}" --flannel-iface=enp7s0 --secrets-encryption --kubelet-arg="cloud-provider=external"
       become: true
       become_user: cluster

@@ -10,7 +10,7 @@
   block:
 
     - name: Install k3s
-      shell: curl -sfL https://get.k3s.io | sh -s - server --cluster-init --node-ip={{ private_networks[0].ip }} --disable-cloud-controller --disable metrics-server --disable=traefik --write-kubeconfig-mode=644 --disable local-storage --node-name="$(hostname -f)" --cluster-cidr="10.244.0.0/16" --kube-controller-manager-arg="bind-address=0.0.0.0" --kube-proxy-arg="metrics-bind-address=0.0.0.0" --kube-scheduler-arg="bind-address=0.0.0.0" --token={{ k3s.token }} --tls-san="$(hostname -I | awk '{print $2}')" --tls-san="{{ hostvars[inventory_hostname].ansible_host }}" --flannel-iface=enp7s0 --secrets-encryption --kubelet-arg="cloud-provider=external"
+      shell: curl -sfL https://get.k3s.io | sh -s - server --cluster-init --node-ip={{ private_networks[0].ip }} --disable-cloud-controller --disable metrics-server --disable=traefik --write-kubeconfig-mode=644 --disable local-storage --node-name="$(hostname -f)" --cluster-cidr="10.244.0.0/16" --kube-controller-manager-arg="bind-address=0.0.0.0" --kube-proxy-arg="metrics-bind-address=0.0.0.0" --kube-scheduler-arg="bind-address=0.0.0.0" --token={{ k3s.token }} --tls-san="$(hostname -I | awk '{print $2}')" --tls-san="{{ ansible_host }}" --flannel-iface=enp7s0 --secrets-encryption --kubelet-arg="cloud-provider=external"
 
     - name: Change ownership of k3s.yaml
       file:
