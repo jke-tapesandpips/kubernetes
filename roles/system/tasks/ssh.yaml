@@ -20,6 +20,14 @@
   loop_control:
     label: "{{ item.name }}"
 
+- name: "Add normal users"
+  user:
+    name: "{{ item.name }}"
+    append: yes
+  loop: "{{ users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
 - name: Create .ssh directory
   file:
     path: "/home/{{ item.name }}/.ssh"
@@ -39,6 +47,14 @@
     - "{{ admins }}"
     - vars.public-keys
 
+- name: Add SSH public keys for normal users
+  authorized_key:
+    user: "{{ item.0.name }}"
+    key: "{{ item.1.key }}"
+  with_subelements:
+    - "{{ users }}"
+    - vars.public-keys
+
 - name: "Add sudoers config for sudo group"
   copy:
     content: |
@@ -46,9 +62,14 @@
     dest: /etc/sudoers.d/sudo
     mode: 0440
 
-- name: Set /bin/bash as default shell for users
+- name: Set /bin/bash as default shell for admins
   command: usermod -s /bin/bash {{ item.name }}
   loop: "{{ admins }}"
   loop_control:
     label: "{{ item.name }}"
-  notify: Restart ssh
+
+- name: Set /bin/bash as default shell for users
+  command: usermod -s /bin/bash {{ item.name }}
+  loop: "{{ users }}"
+  loop_control:
+    label: "{{ item.name }}"
