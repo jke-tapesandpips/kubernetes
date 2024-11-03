@@ -1,0 +1,23 @@
+---
+
+- name: "Ensure private networks are present."
+  hetzner.hcloud.hcloud_network:
+    name: "{{ net.name }}"
+    ip_range: "{{ net.ip_range }}"
+    state: "{{ net.state }}"
+  loop: "{{ hcloud.network.private_networks }}"
+  loop_control:
+    loop_var: net
+    label: "{{ net.name }}"
+
+- name: "Ensure private subnetworks are present."
+  hetzner.hcloud.hcloud_subnetwork:
+    network: "{{ subnet.network }}"
+    ip_range: "{{ subnet.ip_range }}"
+    type: cloud
+    state: "{{ subnet.state }}"
+    network_zone: eu-central
+  loop: "{{ hcloud.network.private_subnets }}"
+  loop_control:
+    loop_var: subnet
+    label: "{{ subnet.ip_range }}"

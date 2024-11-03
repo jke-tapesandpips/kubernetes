@@ -1,0 +1,95 @@
+hcloud:
+
+  sshkey:
+    - name: "kubernetes-fallback"
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILL7mlMk2TIOCaSNog7xmN1LOsQzivOnHut/+fdKvLl5"
+      state: present
+
+  firewalls:
+    - name: firewall-default
+      state: present
+      rules:
+
+        - description: ssh
+          direction: in
+          protocol: tcp
+          port: 22
+          source_ips:
+            - 0.0.0.0/0
+            - ::/0
+        - description: icmp
+          direction: in
+          protocol: icmp
+          source_ips:
+            - 0.0.0.0/0
+            - ::/0
+        - description: tcp
+          direction: out
+          protocol: tcp
+          port: any
+          destination_ips:
+            - 0.0.0.0/0
+            - ::/0
+        - description: udp
+          direction: out
+          protocol: udp
+          port: any
+          destination_ips:
+            - 0.0.0.0/0
+            - ::/0
+        - description: icmp
+          direction: out
+          protocol: icmp
+          destination_ips:
+            - 0.0.0.0/0
+            - ::/0
+
+#    - name: firewall-services
+#      state: present
+#      rules:
+#
+#      - description: ssh
+#        direction: in
+#        protocol: tcp
+#        port: 22
+#        source_ips:
+#          - 0.0.0.0/0
+#          - ::/0
+#      - description: icmp
+#        direction: in
+#        protocol: icmp
+#        source_ips:
+#          - 0.0.0.0/0
+#          - ::/0
+
+  network:
+    private_networks:
+      - name: internal_network
+        ip_range: 10.70.0.0/16
+        state: present
+
+    private_subnets:
+      - network: internal_network
+        ip_range: 10.70.1.0/24
+        state: present
+
+  placement_groups:
+    - name: pg-scraper
+      state: present
+      type: spread
+
+  server:
+    state: present
+    name: "{{ inventory_hostname }}"
+    type: cax11
+    image: ubuntu-24.04
+    backup: false
+    fsn: fsn1-dc14
+    nbg: nbg1-dc3
+    public_ipv4_enabled: false
+    public_ipv6_enabled: true
+    placement_group: "pg-scraper"
+    ssh_keys: 
+    firewalls:
+       - firewall-default
+    volumes: []

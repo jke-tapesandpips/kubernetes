@@ -1,0 +1,11 @@
+---
+
+- name: Setup Infrastructure in HCloud
+  hosts: localhost
+  become: no
+  roles:
+    - hetzner
+  tags:
+    - infrastructure
+    - hetzner
+    - hcloud

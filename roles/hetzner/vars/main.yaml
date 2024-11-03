@@ -1,0 +1,37 @@
+servers:
+  - name: master-nbg-0
+    internal_ip: 10.70.1.10
+    labels:
+      role: master
+      environment: kubernetes
+      orchestration: k3s
+  - name: master-nbg-1
+    internal_ip: 10.70.1.11
+    labels:
+      role: slave
+      environment: kubernetes
+      orchestration: k3s
+  - name: master-fsn-0
+    internal_ip: 10.70.1.12
+    labels:
+      role: slave
+      environment: kubernetes
+      orchestration: k3s
+  - name: worker-nbg-0
+    internal_ip: 10.70.1.50
+    labels:
+      role: worker
+      environment: kubernetes
+      orchestration: k3s
+#  - name: worker-nbg-1
+#    internal_ip: 10.70.1.51
+#    labels:
+#      role: worker
+#      environment: kubernetes
+#      orchestration: k3s
+  - name: worker-fsn-0
+    internal_ip: 10.70.1.52
+    labels:
+      role: worker
+      environment: kubernetes
+      orchestration: k3s

@@ -1,0 +1,23 @@
+plugin: hetzner.hcloud.hcloud
+# api_token: "{{ hetzner_api_token }}"
+
+compose:
+  ansible_host: public_ipv4
+  inventory_hostname: "'{}-{}'.format(name, location)"
+
+groups:
+  hcloud: True  # All Hetzner Cloud servers
+  hcloud_kubernetes: "'kubernetes' in labels.values()"  # All servers with Kubernetes label
+  hcloud_nbg: "'nbg' in location"  # Group servers by Nuremberg location
+  hcloud_fsn: "'fsn' in location"  # Group servers by Falkenstein location
+
+keyed_groups:
+  # Location-based groups
+  - key: location
+    prefix: hcloud
+    parent_group: hcloud
+
+  # Group servers by their role label (e.g., master, worker, slave)
+  - key: labels.role
+    prefix: hcloud
+    parent_group: hcloud
