@@ -18,3 +18,11 @@
   tags:
     - system
     - general
+
+- name: Setup Kubernetes
+  hosts: hcloud_kubernetes
+  become: yes
+  roles:
+    - kubernetes
+  tags:
+    - kubernetes
