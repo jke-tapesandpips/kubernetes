@@ -6,6 +6,8 @@
 ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
 
-{% for host in groups['kubernetes'] %}
-{{ hostvars[host]['internal_ip'] }} {{ host }}
+{% for host in groups['hcloud_kubernetes'] %}
+{% for network in hostvars[host]['private_networks'] %}
+{{ network['ip'] }} {{ host }}
+{% endfor %}
 {% endfor %}

@@ -9,3 +9,12 @@
     - infrastructure
     - hetzner
     - hcloud
+
+- name: Setup general system
+  hosts: all
+  become: yes
+  roles:
+    - system
+  tags:
+    - system
+    - general
